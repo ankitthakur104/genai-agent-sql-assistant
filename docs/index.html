@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GenAI Agent-Based SQL Assistant — Ankit Kumar</title>
+  <meta name="description" content="LLM-powered NL-to-SQL system with multi-agent orchestration, RAG, and n8n automation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--cyan:#06b6d4;--purple:#8b5cf6;--bg:#0a0e1a;--card:#111827;--border:#1f2937;--text:#e2e8f0;--muted:#94a3b8}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.6;min-height:100vh}
+    a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
+    .hero{padding:80px 24px 60px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(6,182,212,.12) 0%,transparent 70%);border-bottom:1px solid var(--border)}
+    .back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:.85rem;margin-bottom:32px;padding:8px 16px;border:1px solid var(--border);border-radius:9999px;transition:.2s}
+    .back:hover{border-color:var(--cyan);color:var(--cyan);text-decoration:none}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);color:var(--cyan);font-size:.75rem;padding:4px 12px;border-radius:9999px;margin-bottom:20px}
+    h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-1px;margin-bottom:16px;background:linear-gradient(135deg,#fff 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .subtitle{color:var(--muted);font-size:1.1rem;max-width:700px;margin:0 auto 32px}
+    .metrics{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+    .metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center}
+    .metric-val{font-size:1.8rem;font-weight:800;color:var(--cyan)}
+    .metric-lbl{font-size:.75rem;color:var(--muted);margin-top:2px}
+    .cta{display:inline-flex;align-items:center;gap:8px;background:var(--cyan);color:#000;font-weight:700;padding:12px 28px;border-radius:9999px;margin:4px;transition:.2s}
+    .cta:hover{background:#22d3ee;text-decoration:none}
+    .cta-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+    .cta-outline:hover{border-color:var(--cyan);color:var(--cyan);background:transparent}
+    main{max-width:900px;margin:0 auto;padding:60px 24px}
+    .section{margin-bottom:56px}
+    h2{font-size:1.5rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+    h2 .icon{width:32px;height:32px;background:rgba(6,182,212,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:.2s}
+    .card:hover{border-color:rgba(6,182,212,.4)}
+    .card h3{font-size:1rem;font-weight:600;margin-bottom:8px;color:#fff}
+    .card p{font-size:.875rem;color:var(--muted)}
+    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .tag{background:#1e293b;border:1px solid var(--border);color:var(--muted);font-size:.72rem;padding:3px 10px;border-radius:9999px}
+    .tag.primary{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:var(--cyan)}
+    pre{background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:24px;overflow-x:auto;font-size:.82rem;line-height:1.7}
+    code{font-family:'Fira Code','Courier New',monospace}
+    .kw{color:#ff79c6}.fn{color:#50fa7b}.str{color:#f1fa8c}.cm{color:#6272a4}.op{color:var(--cyan)}.cls{color:#8be9fd}
+    .arch{background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;font-family:monospace;font-size:.9rem;line-height:2;color:var(--muted);overflow-x:auto}
+    .arch .node{color:#fff;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.4);border-radius:8px;padding:4px 16px;display:inline-block;margin:2px}
+    .arch .arrow{color:var(--cyan)}
+    footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;color:var(--muted);font-size:.875rem}
+    footer a{color:var(--purple)}
+  </style>
+  </head><body>
+  <div class="hero">
+    <a class="back" href="https://ankitthakur104.github.io">← Back to Portfolio</a>
+    <div class="badge">⚡ Featured Project</div>
+    <h1>GenAI Agent-Based SQL Assistant</h1>
+    <p class="subtitle">Production-grade multi-agent system that translates natural language into precise SQL queries with 85% accuracy, powered by LangChain + OpenAI and orchestrated via n8n.</p>
+    <div class="metrics">
+      <div class="metric"><div class="metric-val">85%</div><div class="metric-lbl">Query Accuracy</div></div>
+      <div class="metric"><div class="metric-val">-30%</div><div class="metric-lbl">Hallucinations</div></div>
+      <div class="metric"><div class="metric-val">-20%</div><div class="metric-lbl">Latency</div></div>
+      <div class="metric"><div class="metric-val">10K</div><div class="metric-lbl">Requests/Day</div></div>
+    </div>
+    <a class="cta" href="https://github.com/ankitthakur104/genai-agent-sql-assistant">View on GitHub</a>
+    <a class="cta cta-outline" href="https://ankitthakur104.github.io">Portfolio</a>
+  </div>
+  <main>
+    <div class="section">
+      <h2><span class="icon">🏗</span> Architecture</h2>
+      <div class="arch">
+        <span class="node">User Query</span>
+        <span class="arrow"> → </span><span class="node">Intent Agent</span>
+        <span class="arrow"> → </span><span class="node">Schema RAG</span>
+        <br><span class="arrow">↓</span><br>
+        <span class="node">SQL Generator</span>
+        <span class="arrow"> → </span><span class="node">Validator</span>
+        <span class="arrow"> → </span><span class="node">DB Executor</span>
+        <span class="arrow"> → </span><span class="node">Response</span>
+      </div>
+    </div>
+    <div class="section">
+      <h2><span class="icon">✨</span> Key Features</h2>
+      <div class="grid">
+        <div class="card"><h3>Multi-Agent Orchestration</h3><p>Intent → Planning → SQL Gen → Validation pipeline with separate specialized agents per stage.</p></div>
+        <div class="card"><h3>RAG + Pinecone</h3><p>Schema-aware context injection via vector retrieval reduces incorrect outputs by 25–30%.</p></div>
+        <div class="card"><h3>Guardrails</h3><p>Confidence scoring, execution validation, and query safety checks before DB execution.</p></div>
+        <div class="card"><h3>n8n Automation</h3><p>API integrations and workflow triggers via n8n for downstream system connectivity.</p></div>
+        <div class="card"><h3>FastAPI Server</h3><p>Production REST API handling 5K–10K daily requests with structured JSON responses.</p></div>
+        <div class="card"><h3>Cost Optimized</h3><p>Retrieval caching and prompt compression reduce OpenAI API costs by 15–20%.</p></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2><span class="icon">💻</span> Core Code</h2>
+      <pre><code><span class="cm"># Multi-agent SQL generation pipeline</span>
+  <span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+  <span class="kw">from</span> langchain.prompts <span class="kw">import</span> PromptTemplate
+
+  <span class="cls">SQL_PROMPT</span> <span class="op">=</span> PromptTemplate(
+      input_variables<span class="op">=</span>[<span class="str">"schema_context"</span>, <span class="str">"question"</span>],
+      template<span class="op">=</span><span class="str">"""You are an expert SQL generator.
+  Schema Context: {schema_context}
+  Question: {question}
+  SQL Query:"""</span>
+  )
+
+  <span class="kw">async def</span> <span class="fn">generate_sql</span>(question: str, schema: dict):
+      intent <span class="op">=</span> <span class="kw">await</span> classify_intent(question)
+      context <span class="op">=</span> build_schema_context(schema)
+      chain <span class="op">=</span> SQL_PROMPT <span class="op">|</span> llm
+      sql <span class="op">=</span> (chain.invoke({<span class="str">"schema_context"</span>: context,
+                            <span class="str">"question"</span>: question})).content
+      is_valid, confidence <span class="op">=</span> validate_sql(sql, schema)
+      <span class="kw">return</span> QueryResponse(sql<span class="op">=</span>sql, intent<span class="op">=</span>intent,
+                            confidence<span class="op">=</span>confidence)</code></pre>
+    </div>
+    <div class="section">
+      <h2><span class="icon">🛠</span> Tech Stack</h2>
+      <div class="tags">
+        <span class="tag primary">Python</span><span class="tag primary">LangChain</span><span class="tag primary">OpenAI GPT-4o</span><span class="tag primary">Pinecone</span><span class="tag">n8n</span><span class="tag">FastAPI</span><span class="tag">RAG</span><span class="tag">Docker</span><span class="tag">Multi-Agent</span>
+      </div>
+    </div>
+  </main><footer>
+    <p>Built by <a href="https://ankitthakur104.github.io">Ankit Kumar</a> · <a href="https://github.com/ankitthakur104">GitHub</a> · All projects use real production-grade code</p>
+  </footer></body></html>
