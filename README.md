@@ -1,6 +1,9 @@
 # GenAI Agent-Based SQL Assistant
 
-  An LLM-powered Natural Language to SQL system using multi-agent orchestration, RAG pipelines, and n8n automation.
+  An LLM-powered Natural Language to SQL system built by Ankit Kumar — AI/GenAI Engineer with 3+ years of experience designing and shipping production AI systems.
+
+  ## Overview
+  Multi-agent orchestration pipeline that converts natural language queries into accurate SQL using RAG, schema-aware prompting, and LangChain.
 
   ## Features
   - Natural language → SQL translation via LangChain + OpenAI
@@ -32,6 +35,9 @@
   |--------|--------|-------|
   | Query Accuracy | 70% | 85% |
   | Hallucinations | baseline | -30% |
-  | Latency | baseline | -20-25% |
-  | API Cost | baseline | -15-20% |
+  | Latency | baseline | -20–25% |
+  | API Cost | baseline | -15–20% |
+
+  ## Contact
+  **Ankit Kumar** · ankitthakur104@gmail.com · [GitHub](https://github.com/ankitthakur104)
   
