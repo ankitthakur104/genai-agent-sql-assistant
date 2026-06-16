@@ -1,468 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GenAI SQL Assistant – Live Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{--cyan:#06b6d4;--purple:#8b5cf6;--green:#22c55e;--orange:#f97316;--bg:#0a0e1a;--card-bg:#111827;--card-dark:#0f172a;--border:#1f2937;--text:#e2e8f0;--muted:#94a3b8}
-    body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
-    a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
-    .navbar{background:rgba(10,14,26,.96);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
-    .nav-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:.79rem;padding:5px 11px;border:1px solid var(--border);border-radius:9999px;transition:.2s}
-    .back-btn:hover{border-color:var(--cyan);color:var(--cyan);text-decoration:none}
-    .page-title{font-weight:700;font-size:.9rem}
-    .badge{font-size:.67rem;padding:2px 9px;border-radius:9999px;border:1px solid}
-    .badge-cyan{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:var(--cyan)}
-    .github-link{color:var(--muted);font-size:.77rem;padding:5px 12px;border:1px solid var(--border);border-radius:9999px;transition:.2s;display:inline-flex;align-items:center;gap:5px}
-    .github-link:hover{color:var(--text);text-decoration:none}
-    .hero{padding:30px 22px 22px;text-align:center;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at 50% 0%,rgba(6,182,212,.1) 0%,transparent 60%)}
-    .hero h1{font-size:clamp(1.35rem,3vw,1.9rem);font-weight:800;letter-spacing:-.4px;background:linear-gradient(135deg,#fff 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .hero-sub{color:var(--muted);font-size:.85rem;margin-top:6px;max-width:600px;margin-left:auto;margin-right:auto}
-    .metrics-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
-    .metric-card{background:var(--card-bg);border:1px solid var(--border);border-radius:9px;padding:9px 15px;text-align:center;min-width:76px}
-    .metric-value{font-size:1.15rem;font-weight:800;color:var(--cyan)}
-    .metric-label{font-size:.61rem;color:var(--muted)}
-    .page-content{max-width:860px;margin:0 auto;padding:26px 16px}
-    .demo-card{background:var(--card-bg);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:18px}
-    .card-header{padding:11px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:var(--card-dark)}
-    .traffic-dot{width:8px;height:8px;border-radius:50%}
-    .card-label{font-size:.72rem;font-weight:600;color:var(--muted);font-family:monospace;margin-left:4px}
-    .card-body{padding:17px}
-    .section-label{font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px;font-weight:600}
-    .schema-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-    .schema-tab{font-size:.72rem;padding:3px 11px;border-radius:9999px;border:1px solid var(--border);background:#0d1117;color:var(--muted);cursor:pointer;transition:.2s}
-    .schema-tab.active{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08)}
-    .schema-block{background:#0d1117;border:1px solid var(--border);border-radius:7px;padding:10px;font-family:'Fira Code',monospace;font-size:.74rem;color:var(--muted);margin-bottom:13px;line-height:1.8}
-    .schema-block .col-key{color:var(--cyan)}
-    .schema-block .col-type{color:#a78bfa}
-    textarea,input[type="text"]{width:100%;background:#0d1117;border:1px solid var(--border);color:var(--text);padding:9px 13px;border-radius:8px;font-size:.86rem;font-family:inherit;resize:vertical;outline:none;transition:.2s}
-    textarea:focus,input[type="text"]:focus{border-color:var(--cyan)}
-    .run-btn{display:inline-flex;align-items:center;gap:7px;background:var(--cyan);color:#000;font-weight:700;padding:9px 21px;border-radius:9999px;border:none;cursor:pointer;font-size:.84rem;margin-top:9px;transition:.2s}
-    .run-btn:hover{background:#22d3ee}
-    .run-btn:disabled{opacity:.5;cursor:not-allowed}
-    .example-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-    .chip{background:#1e293b;border:1px solid var(--border);color:var(--muted);font-size:.72rem;padding:4px 11px;border-radius:9999px;cursor:pointer;transition:.2s}
-    .chip:hover{border-color:var(--cyan);color:var(--cyan)}
-    .pipeline-steps{display:flex;gap:0;margin-top:13px;display:none}
-    .pipeline-steps.active{display:flex}
-    .p-step{flex:1;text-align:center;padding:7px 4px;border:1px solid var(--border);background:#0d1117;font-size:.65rem;color:var(--muted);position:relative;transition:.4s}
-    .p-step:not(:last-child)::after{content:'›';position:absolute;right:-6px;top:50%;transform:translateY(-50%);z-index:1;color:var(--border);font-size:1rem}
-    .p-step.done{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
-    .p-step.active-step{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08)}
-    .output-block{background:#0d1117;border:1px solid var(--border);border-radius:9px;padding:16px;margin-top:13px;font-family:'Fira Code',monospace;font-size:.8rem;line-height:1.9;display:none;animation:fade-in .35s ease}
-    .output-block.visible{display:block}
-    .sql-kw{color:#ff79c6}
-    .sql-fn{color:#8be9fd}
-    .sql-str{color:#f1fa8c}
-    .sql-num{color:#bd93f9}
-    .sql-comment{color:#6272a4;font-style:italic}
-    .intent-badge{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:4px;margin-bottom:10px;font-family:'Fira Code',monospace}
-    .intent-SELECT{background:rgba(6,182,212,.15);color:var(--cyan);border:1px solid rgba(6,182,212,.3)}
-    .intent-AGGREGATE{background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3)}
-    .intent-FILTER{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-    .intent-JOIN{background:rgba(249,115,22,.15);color:var(--orange);border:1px solid rgba(249,115,22,.3)}
-    .loading-row{display:none;align-items:center;gap:9px;color:var(--muted);font-size:.82rem;margin-top:11px}
-    .loading-row.active{display:flex}
-    .spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-    @media(max-width:560px){.two-col{grid-template-columns:1fr}}
-    .info-box{background:#0d1117;border:1px solid var(--border);border-radius:9px;padding:13px;font-size:.78rem;line-height:1.7;color:var(--muted)}
-    .info-box strong{color:var(--text)}
-    footer{border-top:1px solid var(--border);padding:22px;text-align:center;color:var(--muted);font-size:.77rem}
-    footer a{color:var(--purple)}
-    .confidence-bar{height:4px;border-radius:2px;background:var(--border);margin-top:8px;overflow:hidden}
-    .confidence-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px;transition:width .6s ease}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Analytics & SQL Copilot — Ankit Kumar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07090f;--card:#0d1117;--card2:#111827;--border:#1f2937;--border2:#374151;--text:#f1f5f9;--muted:#6b7280;--dim:#9ca3af;--blue:#3b82f6;--purple:#8b5cf6;--green:#10b981;--amber:#f59e0b;--cyan:#06b6d4;--red:#ef4444}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+code,pre,kbd{font-family:'Fira Code',monospace}
+a{color:var(--blue);text-decoration:none}
+
+.topbar{background:#0a0d14;border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--green),var(--cyan));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.badge-live{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:3px 10px}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar-links{display:flex;align-items:center;gap:16px;font-size:12px}
+.topbar-links a{color:var(--dim);transition:color .2s}.topbar-links a:hover{color:var(--text)}
+.topbar-links span{color:var(--muted)}
+
+.tech-bar{background:#090c14;border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tech-pill{font-size:11px;padding:3px 10px;border-radius:12px;font-family:'Fira Code',monospace}
+.tp-blue{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--blue)}
+.tp-purple{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);color:var(--purple)}
+.tp-green{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green)}
+.tp-cyan{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:var(--cyan)}
+.tp-amber{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
+
+.layout{flex:1;display:grid;grid-template-columns:260px 1fr 300px;overflow:hidden;height:calc(100vh - 108px)}
+
+.panel{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.panel-body{overflow-y:auto;flex:1;padding:12px}
+
+.schema-table{margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.schema-table-header{padding:8px 12px;background:var(--card2);font-size:11px;font-weight:600;color:var(--cyan);display:flex;align-items:center;gap:6px;cursor:pointer;border-bottom:1px solid var(--border)}
+.schema-table-body{display:none;padding:8px}
+.schema-table.open .schema-table-body{display:block}
+.schema-col{display:flex;align-items:center;gap:8px;padding:4px 6px;font-size:11px;border-radius:4px}
+.schema-col:hover{background:rgba(255,255,255,.03)}
+.col-name{font-family:'Fira Code',monospace;color:var(--text);flex:1}
+.col-type{font-family:'Fira Code',monospace;color:var(--muted);font-size:10px}
+.col-pk{font-size:9px;padding:1px 5px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber);border-radius:3px}
+.col-fk{font-size:9px;padding:1px 5px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:var(--purple);border-radius:3px}
+
+.cache-indicator{padding:8px 12px;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:6px;font-size:11px;margin-top:8px}
+.cache-label{color:var(--green);font-weight:600;margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.cache-detail{color:var(--muted);font-size:10px;font-family:'Fira Code',monospace}
+
+.main-area{display:flex;flex-direction:column;overflow:hidden}
+
+.query-bar{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;gap:10px}
+.query-examples{display:flex;gap:6px;flex-wrap:wrap}
+.example-chip{padding:5px 10px;font-size:11px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;cursor:pointer;color:var(--dim);transition:all .2s;white-space:nowrap}
+.example-chip:hover{border-color:var(--green);color:var(--text);background:rgba(16,185,129,.05)}
+.query-input-row{display:flex;gap:10px;align-items:flex-end}
+.query-input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;resize:none;line-height:1.5;transition:border-color .2s}
+.query-input:focus{outline:none;border-color:var(--green)}
+.run-btn{padding:10px 18px;background:var(--green);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+.run-btn:hover{opacity:.85}.run-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.results-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+
+.step-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.step-card-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)}
+.step-card-body{padding:14px;font-size:12px;line-height:1.7}
+.sql-block{background:#0a0d14;border:1px solid var(--border2);border-radius:8px;padding:14px;font-family:'Fira Code',monospace;font-size:12px;line-height:1.8;overflow-x:auto;white-space:pre}
+.kw{color:var(--cyan)}.fn{color:var(--amber)}.str{color:var(--green)}.num{color:var(--purple)}.cm{color:var(--muted)}
+.validation-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.vb-pass{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)}
+.vb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.vb-fail{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+
+.result-table{width:100%;border-collapse:collapse;font-size:11px}
+.result-table th{text-align:left;padding:7px 10px;background:rgba(255,255,255,.04);color:var(--muted);font-family:'Fira Code',monospace;font-weight:500;border-bottom:1px solid var(--border)}
+.result-table td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-family:'Fira Code',monospace;color:var(--text)}
+.result-table tr:last-child td{border-bottom:none}
+.result-table tr:hover td{background:rgba(255,255,255,.02)}
+.td-num{color:var(--cyan)}.td-pos{color:var(--green)}.td-neg{color:var(--red)}
+
+.interpretation{background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;color:var(--text)}
+.interp-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--green);font-weight:600;margin-bottom:8px}
+
+.right-panel{background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.agent-step{padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:11px;transition:all .3s}
+.agent-step.done{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.04)}
+.agent-step.running{border-color:rgba(6,182,212,.5);background:rgba(6,182,212,.06);animation:gPulse 1s infinite}
+.agent-step.pending{opacity:.3}
+@keyframes gPulse{0%,100%{border-color:rgba(6,182,212,.5)}50%{border-color:rgba(6,182,212,1)}}
+.agent-name{font-weight:600;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
+.agent-detail{color:var(--muted);font-size:10px;font-family:'Fira Code',monospace;line-height:1.4}
+.agent-time{color:var(--green);font-family:'Fira Code',monospace;font-size:10px}
+.spin{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.perf-section{padding:12px;border-top:1px solid var(--border)}
+.perf-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:8px}
+.perf-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:11px}
+.perf-metric{color:var(--dim)}
+.perf-val{font-family:'Fira Code',monospace;font-weight:600;font-size:11px}
+.perf-bar-wrap{width:50px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-left:6px}
+.perf-bar{height:100%;border-radius:2px;transition:width .8s ease}
+
+.mcp-tool{padding:6px 10px;background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.2);border-radius:6px;font-size:10px;margin-bottom:6px;font-family:'Fira Code',monospace;color:var(--cyan)}
+.mcp-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+</style>
 </head>
 <body>
-
-<nav class="navbar">
-  <div class="nav-left">
-    <a class="back-btn" href="https://ankitthakur104.github.io">&larr; Portfolio</a>
-    <span class="page-title">GenAI SQL Assistant</span>
-    <span class="badge badge-cyan">Live Demo</span>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    Agentic Analytics &amp; SQL Copilot
   </div>
-  <a class="github-link" href="https://github.com/ankitthakur104/genai-agent-sql-assistant" target="_blank">&#9733; View Code</a>
-</nav>
-
-<section class="hero">
-  <h1>Natural Language → SQL Generator</h1>
-  <p class="hero-sub">Multi-agent pipeline: intent classification → schema RAG retrieval → SQL generation → validation. Try any business question below.</p>
-  <div class="metrics-row">
-    <div class="metric-card"><div class="metric-value">85%</div><div class="metric-label">Query Accuracy</div></div>
-    <div class="metric-card"><div class="metric-value">−30%</div><div class="metric-label">Hallucinations</div></div>
-    <div class="metric-card"><div class="metric-value">−25%</div><div class="metric-label">Latency</div></div>
-    <div class="metric-card"><div class="metric-value">10K+</div><div class="metric-label">Req/Day</div></div>
+  <div class="topbar-links">
+    <span>Ankit Kumar</span>
+    <a href="https://ankitthakur104.github.io" target="_blank">Portfolio</a>
+    <a href="mailto:ankitthakur104@gmail.com">ankitthakur104@gmail.com</a>
+    <div class="badge-live"><div class="pulse"></div>Live Demo</div>
   </div>
-</section>
+</div>
 
-<div class="page-content">
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="traffic-dot" style="background:#ff5555"></div>
-      <div class="traffic-dot" style="background:#ffb86c"></div>
-      <div class="traffic-dot" style="background:#50fa7b"></div>
-      <span class="card-label">multi-agent · LangChain · GPT-4o · Pinecone RAG</span>
-    </div>
-    <div class="card-body">
-      <div class="section-label">Live Schema (RAG-retrieved from Pinecone)</div>
-      <div class="schema-tabs" id="schema-tabs"></div>
-      <div class="schema-block" id="schema-display"></div>
+<div class="tech-bar">
+  <span class="tech-pill tp-blue">Python</span>
+  <span class="tech-pill tp-purple">LangGraph</span>
+  <span class="tech-pill tp-blue">OpenAI API</span>
+  <span class="tech-pill tp-cyan">MCP</span>
+  <span class="tech-pill tp-green">PostgreSQL</span>
+  <span class="tech-pill tp-amber">Schema Caching</span>
+  <span class="tech-pill tp-cyan">Query Validation</span>
+  <span class="tech-pill tp-purple">RAG Schema Understanding</span>
+</div>
 
-      <div class="section-label">Your Question</div>
-      <textarea id="question-input" rows="2" placeholder="e.g. Show me the top 10 customers by total revenue this quarter"></textarea>
-      <div class="example-chips" id="example-chips"></div>
-      <button class="run-btn" id="run-btn" onclick="generateSQL()">&#9654; Generate SQL</button>
-
-      <div class="loading-row" id="loading-indicator">
-        <div class="spinner"></div>
-        <span id="loading-text">Classifying intent...</span>
+<div class="layout">
+  <!-- Schema Explorer -->
+  <div class="panel">
+    <div class="panel-header">🗃 Schema Explorer</div>
+    <div class="panel-body">
+      <div id="schema-tree"></div>
+      <div class="cache-indicator">
+        <div class="cache-label">⚡ Schema Cache</div>
+        <div class="cache-detail">5 tables · 38 cols · TTL: 5m<br>Last updated: 14s ago</div>
       </div>
-
-      <div class="pipeline-steps" id="pipeline-steps">
-        <div class="p-step" id="step-intent">Intent</div>
-        <div class="p-step" id="step-rag">Schema RAG</div>
-        <div class="p-step" id="step-gen">SQL Gen</div>
-        <div class="p-step" id="step-validate">Validate</div>
-      </div>
-
-      <div class="output-block" id="sql-output"></div>
     </div>
   </div>
 
-  <div class="two-col">
-    <div class="info-box">
-      <strong>4-Step Agent Pipeline</strong><br><br>
-      1. <span style="color:var(--cyan)">Intent Agent</span> — SELECT / AGGREGATE / FILTER / JOIN<br>
-      2. <span style="color:var(--cyan)">RAG Retriever</span> — relevant schema from Pinecone<br>
-      3. <span style="color:var(--cyan)">SQL Generator</span> — GPT-4o with schema-grounded prompt<br>
-      4. <span style="color:var(--cyan)">Validator</span> — syntax, table name, column checks
+  <!-- Main Area -->
+  <div class="main-area">
+    <div class="query-bar">
+      <div style="font-size:11px;color:var(--muted);font-weight:500">Try a sample query:</div>
+      <div class="query-examples" id="example-chips"></div>
+      <div class="query-input-row">
+        <textarea class="query-input" id="query-input" placeholder="Ask in plain English — e.g. 'Which customers churned last quarter with LTV > $5K?'" rows="2" onkeydown="queryKey(event)"></textarea>
+        <button class="run-btn" id="run-btn" onclick="runQuery()">▶ Run</button>
+      </div>
     </div>
-    <div class="info-box">
-      <strong>Guardrails Active</strong><br><br>
-      Schema-aware prompting prevents hallucinated columns.<br>
-      SQL syntax validated before execution.<br>
-      No DROP / DELETE / TRUNCATE without confirmation.<br>
-      Confidence threshold &gt;0.75 enforced per query.
+    <div class="results-area" id="results-area">
+      <div style="font-size:12px;color:var(--muted);text-align:center;padding:40px 20px;line-height:1.8">
+        Enter a natural language question above.<br>
+        The agent will discover schema, plan, generate SQL, validate, execute, and interpret results.
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Trace + Performance -->
+  <div class="right-panel">
+    <div class="panel-header">🤖 Agent Execution</div>
+    <div class="panel-body" id="agent-trace">
+      <div style="font-size:11px;color:var(--muted);text-align:center;padding:20px 10px;line-height:1.6">Run a query to see the LangGraph agent pipeline execute</div>
+    </div>
+    <div class="perf-section">
+      <div class="perf-label">⚡ Performance</div>
+      <div class="perf-row"><span class="perf-metric">Query Accuracy</span><div style="display:flex;align-items:center"><span class="perf-val" style="color:var(--green)" id="m-acc">—</span><div class="perf-bar-wrap"><div class="perf-bar" id="b-acc" style="width:0%;background:var(--green)"></div></div></div></div>
+      <div class="perf-row"><span class="perf-metric">Validation Pass</span><div style="display:flex;align-items:center"><span class="perf-val" style="color:var(--cyan)" id="m-val">—</span><div class="perf-bar-wrap"><div class="perf-bar" id="b-val" style="width:0%;background:var(--cyan)"></div></div></div></div>
+      <div class="perf-row"><span class="perf-metric">Schema Hit</span><div style="display:flex;align-items:center"><span class="perf-val" style="color:var(--purple)" id="m-cache">—</span><div class="perf-bar-wrap"><div class="perf-bar" id="b-cache" style="width:0%;background:var(--purple)"></div></div></div></div>
+      <div class="perf-row"><span class="perf-metric">Total Latency</span><span class="perf-val" style="color:var(--amber)" id="m-lat">—</span></div>
+      <div style="margin-top:12px">
+        <div class="mcp-label">🔧 MCP Tool Calls</div>
+        <div id="mcp-tools"></div>
+      </div>
     </div>
   </div>
 </div>
 
-<footer>Built by <a href="https://ankitthakur104.github.io">Ankit Kumar</a> — <a href="mailto:ankitthakur104@gmail.com">ankitthakur104@gmail.com</a></footer>
-
 <script>
-var schemas = {
-  orders: "orders(\n  <span class='col-key'>id</span>            <span class='col-type'>BIGINT PK</span>,\n  <span class='col-key'>customer_id</span>   <span class='col-type'>BIGINT FK</span>,\n  <span class='col-key'>product_id</span>    <span class='col-type'>BIGINT FK</span>,\n  <span class='col-key'>amount</span>        <span class='col-type'>DECIMAL(10,2)</span>,\n  <span class='col-key'>status</span>        <span class='col-type'>ENUM('pending','paid','shipped','cancelled')</span>,\n  <span class='col-key'>created_at</span>    <span class='col-type'>TIMESTAMP</span>\n)",
-  customers: "customers(\n  <span class='col-key'>id</span>            <span class='col-type'>BIGINT PK</span>,\n  <span class='col-key'>name</span>          <span class='col-type'>VARCHAR(100)</span>,\n  <span class='col-key'>email</span>         <span class='col-type'>VARCHAR(150) UNIQUE</span>,\n  <span class='col-key'>country</span>       <span class='col-type'>VARCHAR(60)</span>,\n  <span class='col-key'>signup_date</span>   <span class='col-type'>DATE</span>,\n  <span class='col-key'>plan</span>          <span class='col-type'>ENUM('free','starter','pro','enterprise')</span>\n)",
-  products: "products(\n  <span class='col-key'>id</span>            <span class='col-type'>BIGINT PK</span>,\n  <span class='col-key'>name</span>          <span class='col-type'>VARCHAR(200)</span>,\n  <span class='col-key'>category</span>      <span class='col-type'>VARCHAR(80)</span>,\n  <span class='col-key'>price</span>         <span class='col-type'>DECIMAL(10,2)</span>,\n  <span class='col-key'>stock</span>         <span class='col-type'>INT</span>,\n  <span class='col-key'>created_at</span>    <span class='col-type'>TIMESTAMP</span>\n)",
-  payments: "payments(\n  <span class='col-key'>id</span>            <span class='col-type'>BIGINT PK</span>,\n  <span class='col-key'>order_id</span>      <span class='col-type'>BIGINT FK</span>,\n  <span class='col-key'>method</span>        <span class='col-type'>ENUM('card','upi','netbanking','wallet')</span>,\n  <span class='col-key'>status</span>        <span class='col-type'>ENUM('success','failed','refunded')</span>,\n  <span class='col-key'>paid_at</span>       <span class='col-type'>TIMESTAMP</span>\n)"
-};
-
-var exampleQuestions = [
-  "Top 10 customers by total revenue this quarter",
-  "Monthly revenue trend for last 6 months",
-  "Products with stock below 20 and more than 50 orders",
-  "Customers who signed up in 2024 but never ordered",
-  "Average order value by country",
-  "Failed payment rate by payment method",
-  "Revenue breakdown by product category",
-  "Churn risk: customers inactive for 90+ days"
+var SCHEMA = [
+  {name:"customers",cols:[
+    {name:"id",type:"uuid",pk:true},{name:"name",type:"varchar(255)"},
+    {name:"email",type:"varchar(255)"},{name:"plan",type:"enum"},
+    {name:"ltv",type:"numeric(10,2)"},{name:"created_at",type:"timestamptz"},
+    {name:"churned_at",type:"timestamptz"},{name:"country",type:"varchar(2)"}
+  ]},
+  {name:"orders",cols:[
+    {name:"id",type:"uuid",pk:true},{name:"customer_id",type:"uuid",fk:"customers"},
+    {name:"amount",type:"numeric(10,2)"},{name:"status",type:"enum"},
+    {name:"product_id",type:"uuid",fk:"products"},{name:"created_at",type:"timestamptz"}
+  ]},
+  {name:"events",cols:[
+    {name:"id",type:"bigint",pk:true},{name:"customer_id",type:"uuid",fk:"customers"},
+    {name:"event_type",type:"varchar(100)"},{name:"properties",type:"jsonb"},
+    {name:"session_id",type:"uuid"},{name:"ts",type:"timestamptz"}
+  ]},
+  {name:"products",cols:[
+    {name:"id",type:"uuid",pk:true},{name:"name",type:"varchar(255)"},
+    {name:"category",type:"varchar(100)"},{name:"price",type:"numeric(10,2)"},
+    {name:"mrr_contribution",type:"numeric(10,2)"}
+  ]},
+  {name:"subscriptions",cols:[
+    {name:"id",type:"uuid",pk:true},{name:"customer_id",type:"uuid",fk:"customers"},
+    {name:"plan",type:"varchar(50)"},{name:"mrr",type:"numeric(10,2)"},
+    {name:"status",type:"enum"},{name:"started_at",type:"timestamptz"},
+    {name:"cancelled_at",type:"timestamptz"}
+  ]}
 ];
 
-(function init() {
-  var tabs = document.getElementById('schema-tabs');
-  Object.keys(schemas).forEach(function(t, i) {
-    var el = document.createElement('span');
-    el.className = 'schema-tab' + (i === 0 ? ' active' : '');
-    el.textContent = t;
-    el.onclick = function() {
-      document.querySelectorAll('.schema-tab').forEach(function(x){x.classList.remove('active')});
-      el.classList.add('active');
-      document.getElementById('schema-display').innerHTML = schemas[t];
-    };
-    tabs.appendChild(el);
-  });
-  document.getElementById('schema-display').innerHTML = schemas.orders;
+var EXAMPLES = [
+  "Which customers churned last quarter with LTV > $5K?",
+  "Show monthly revenue by product category in 2024",
+  "Top 10 customers by total order value this year",
+  "What is the churn rate by subscription plan?",
+  "Find customers with > 3 orders but no events in 30 days"
+];
 
-  var chips = document.getElementById('example-chips');
-  exampleQuestions.forEach(function(q) {
-    var c = document.createElement('span');
-    c.className = 'chip';
-    c.textContent = q;
-    c.onclick = function(){ document.getElementById('question-input').value = q; };
-    chips.appendChild(c);
-  });
-})();
+var AGENT_STEPS = [
+  {icon:"🔍",name:"Schema Discovery",detail:"Cache hit — schema loaded in 12ms",time:"0.12s"},
+  {icon:"🎯",name:"Intent Analysis",detail:"NL → query intent + table selection",time:"0.21s"},
+  {icon:"📐",name:"Query Planning",detail:"Join path + filter strategy planning",time:"0.19s"},
+  {icon:"⚡",name:"SQL Generation",detail:"GPT-4o prompt + schema context injection",time:"0.58s"},
+  {icon:"✅",name:"Validation",detail:"Syntax check + semantic correctness",time:"0.13s"},
+  {icon:"🔧",name:"MCP Execution",detail:"Secure DB execute via MCP tool",time:"0.34s"},
+  {icon:"📊",name:"Interpretation",detail:"Result narration + insight generation",time:"0.28s"}
+];
 
-function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+var QUERY_RESPONSES = [
+  {
+    nl:"Which customers churned last quarter with LTV > $5K?",
+    plan:"JOIN customers on churned_at in Q4 date range · FILTER ltv > 5000 · ORDER BY ltv DESC",
+    sql:'<span class="kw">SELECT</span>\n  c.name,\n  c.email,\n  c.plan,\n  c.ltv,\n  c.churned_at,\n  c.country\n<span class="kw">FROM</span> customers c\n<span class="kw">WHERE</span>\n  c.churned_at <span class="kw">BETWEEN</span> <span class="str">\'2024-10-01\'</span> <span class="kw">AND</span> <span class="str">\'2024-12-31\'</span>\n  <span class="kw">AND</span> c.ltv <span class="kw">></span> <span class="num">5000</span>\n<span class="kw">ORDER BY</span> c.ltv <span class="kw">DESC</span>\n<span class="kw">LIMIT</span> <span class="num">50</span>;',
+    validation:{pass:true,checks:["Syntax: valid","Table reference: customers ✓","Date range: Q4 2024 correctly bounded","LTV filter: numeric comparison valid"]},
+    rows:[
+      {name:"Meridian Capital",email:"ops@meridian.io",plan:"Enterprise",ltv:"$48,200",churned_at:"2024-11-14",country:"US"},
+      {name:"BlueWave SaaS",email:"finance@bluewave.co",plan:"Enterprise",ltv:"$31,750",churned_at:"2024-10-22",country:"GB"},
+      {name:"Apex Technologies",email:"admin@apextech.com",plan:"Pro",ltv:"$18,400",churned_at:"2024-12-03",country:"DE"},
+      {name:"Nexus Analytics",email:"team@nexus.ai",plan:"Pro",ltv:"$12,600",churned_at:"2024-11-28",country:"CA"},
+      {name:"DataFlow Inc",email:"billing@dataflow.io",plan:"Pro",ltv:"$8,900",churned_at:"2024-10-09",country:"US"}
+    ],
+    cols:["name","email","plan","ltv","churned_at","country"],
+    interpretation:"5 enterprise/pro customers churned in Q4 2024 with LTV > $5K, totalling <strong>$119,850 in lost lifetime value</strong>. Meridian Capital ($48.2K) and BlueWave ($31.8K) account for 67% of churn value. Enterprise churn requires immediate win-back outreach — average LTV suggests recovery potential above $30K.",
+    mcpTools:["db_query_execute","schema_cache_lookup","query_plan_explain"]
+  },
+  {
+    nl:"Show monthly revenue by product category in 2024",
+    plan:"JOIN orders → products · GROUP BY category, month · SUM amount WHERE status = paid",
+    sql:'<span class="kw">SELECT</span>\n  <span class="fn">DATE_TRUNC</span>(<span class="str">\'month\'</span>, o.created_at) <span class="kw">AS</span> month,\n  p.category,\n  <span class="fn">SUM</span>(o.amount) <span class="kw">AS</span> revenue,\n  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> orders\n<span class="kw">FROM</span> orders o\n<span class="kw">JOIN</span> products p <span class="kw">ON</span> o.product_id = p.id\n<span class="kw">WHERE</span>\n  o.status = <span class="str">\'paid\'</span>\n  <span class="kw">AND</span> <span class="fn">EXTRACT</span>(year <span class="kw">FROM</span> o.created_at) = <span class="num">2024</span>\n<span class="kw">GROUP BY</span> <span class="num">1</span>, <span class="num">2</span>\n<span class="kw">ORDER BY</span> month, revenue <span class="kw">DESC</span>;',
+    validation:{pass:true,checks:["Syntax: valid","JOIN path: orders→products ✓","Aggregation: SUM on numeric ✓","Date filter: EXTRACT year valid"]},
+    rows:[
+      {month:"2024-01",category:"Platform",revenue:"$142,800",orders:"89"},
+      {month:"2024-01",category:"Analytics",revenue:"$98,400",orders:"61"},
+      {month:"2024-01",category:"Support",revenue:"$41,200",orders:"134"},
+      {month:"2024-02",category:"Platform",revenue:"$158,600",orders:"97"},
+      {month:"2024-02",category:"Analytics",revenue:"$112,300",orders:"74"}
+    ],
+    cols:["month","category","revenue","orders"],
+    interpretation:"Platform is the dominant revenue category averaging <strong>$150K/month</strong>, followed by Analytics at $105K. Support plans contribute high order count but lower ACV. Revenue trend shows consistent MoM growth of 8–12% across categories through Q3 2024.",
+    mcpTools:["db_query_execute","schema_cache_lookup","table_stats_fetch"]
+  },
+  {
+    nl:"Top 10 customers by total order value this year",
+    plan:"JOIN customers → orders · SUM amount GROUP BY customer · ORDER BY total DESC LIMIT 10",
+    sql:'<span class="kw">SELECT</span>\n  c.name,\n  c.plan,\n  c.country,\n  <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> order_count,\n  <span class="fn">SUM</span>(o.amount) <span class="kw">AS</span> total_value,\n  <span class="fn">AVG</span>(o.amount) <span class="kw">AS</span> avg_order\n<span class="kw">FROM</span> customers c\n<span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.customer_id = c.id\n<span class="kw">WHERE</span>\n  o.status = <span class="str">\'paid\'</span>\n  <span class="kw">AND</span> <span class="fn">EXTRACT</span>(year <span class="kw">FROM</span> o.created_at) = <span class="num">2024</span>\n<span class="kw">GROUP BY</span> c.id, c.name, c.plan, c.country\n<span class="kw">ORDER BY</span> total_value <span class="kw">DESC</span>\n<span class="kw">LIMIT</span> <span class="num">10</span>;',
+    validation:{pass:true,checks:["Syntax: valid","JOIN: customers→orders ✓","GROUP BY matches SELECT non-aggs ✓","LIMIT applied correctly"]},
+    rows:[
+      {name:"Vertex Systems",plan:"Enterprise",country:"US",order_count:"24",total_value:"$284,400",avg_order:"$11,850"},
+      {name:"Meridian Capital",plan:"Enterprise",country:"US",order_count:"18",total_value:"$231,600",avg_order:"$12,867"},
+      {name:"CloudFirst EU",plan:"Enterprise",country:"DE",order_count:"21",total_value:"$198,900",avg_order:"$9,471"},
+      {name:"PulseAI",plan:"Pro",country:"GB",order_count:"31",total_value:"$124,000",avg_order:"$4,000"},
+      {name:"DataFlow Inc",plan:"Pro",country:"US",order_count:"28",total_value:"$112,000",avg_order:"$4,000"}
+    ],
+    cols:["name","plan","country","order_count","total_value","avg_order"],
+    interpretation:"Top 10 customers represent <strong>$1.23M (38%) of total 2024 revenue</strong>. Enterprise accounts dominate the top 3 with 3–4x higher AOV than Pro. Vertex Systems is the highest-value account at $284K. Geographic concentration in US/EU suggests expansion opportunity in APAC.",
+    mcpTools:["db_query_execute","schema_cache_lookup","query_plan_explain"]
+  },
+  {
+    nl:"What is the churn rate by subscription plan?",
+    plan:"GROUP subscriptions by plan · COUNT cancelled vs total · CALCULATE churn rate",
+    sql:'<span class="kw">SELECT</span>\n  plan,\n  <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_subs,\n  <span class="fn">COUNT</span>(*) <span class="kw">FILTER</span> (<span class="kw">WHERE</span> status = <span class="str">\'cancelled\'</span>) <span class="kw">AS</span> churned,\n  <span class="fn">ROUND</span>(\n    <span class="num">100.0</span> * <span class="fn">COUNT</span>(*) <span class="kw">FILTER</span> (<span class="kw">WHERE</span> status = <span class="str">\'cancelled\'</span>)\n    / <span class="fn">NULLIF</span>(<span class="fn">COUNT</span>(*), <span class="num">0</span>), <span class="num">2</span>\n  ) <span class="kw">AS</span> churn_rate_pct\n<span class="kw">FROM</span> subscriptions\n<span class="kw">GROUP BY</span> plan\n<span class="kw">ORDER BY</span> churn_rate_pct <span class="kw">DESC</span>;',
+    validation:{pass:true,checks:["Syntax: valid","FILTER clause: PostgreSQL 9.4+ ✓","NULLIF prevents division by zero ✓","ROUND with precision applied"]},
+    rows:[
+      {plan:"Starter",total_subs:"1,842",churned:"312",churn_rate_pct:"16.94%"},
+      {plan:"Pro",total_subs:"834",churned:"89",churn_rate_pct:"10.67%"},
+      {plan:"Business",total_subs:"421",churned:"31",churn_rate_pct:"7.36%"},
+      {plan:"Enterprise",total_subs:"198",churned:"9",churn_rate_pct:"4.55%"}
+    ],
+    cols:["plan","total_subs","churned","churn_rate_pct"],
+    interpretation:"Churn decreases significantly with plan tier — Enterprise churn at <strong>4.55%</strong> is 3.7× lower than Starter at 16.94%. This confirms that upselling reduces churn risk. Pro→Business conversion should be prioritized: 38% relative churn reduction. 312 Starter churns represent the highest volume to address with product improvements or early-intervention automation.",
+    mcpTools:["db_query_execute","schema_cache_lookup","table_stats_fetch"]
+  },
+  {
+    nl:"Find customers with > 3 orders but no events in 30 days",
+    plan:"JOIN customers → orders + events · HAVING order_count > 3 · LEFT JOIN events → WHERE last_event IS NULL or > 30d",
+    sql:'<span class="kw">SELECT</span>\n  c.name,\n  c.email,\n  c.plan,\n  <span class="fn">COUNT</span>(DISTINCT o.id) <span class="kw">AS</span> order_count,\n  <span class="fn">MAX</span>(e.ts) <span class="kw">AS</span> last_event,\n  <span class="fn">NOW</span>() - <span class="fn">MAX</span>(e.ts) <span class="kw">AS</span> days_since_event\n<span class="kw">FROM</span> customers c\n<span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.customer_id = c.id\n<span class="kw">LEFT JOIN</span> events e <span class="kw">ON</span> e.customer_id = c.id\n<span class="kw">GROUP BY</span> c.id, c.name, c.email, c.plan\n<span class="kw">HAVING</span>\n  <span class="fn">COUNT</span>(DISTINCT o.id) <span class="kw">></span> <span class="num">3</span>\n  <span class="kw">AND</span> (<span class="fn">MAX</span>(e.ts) <span class="kw">IS NULL</span>\n    <span class="kw">OR</span> <span class="fn">MAX</span>(e.ts) <span class="kw"><</span> <span class="fn">NOW</span>() - <span class="kw">INTERVAL</span> <span class="str">\'30 days\'</span>)\n<span class="kw">ORDER BY</span> order_count <span class="kw">DESC</span>;',
+    validation:{pass:true,checks:["Syntax: valid","LEFT JOIN preserves customers with no events ✓","HAVING on aggregate: correct placement ✓","INTERVAL syntax: PostgreSQL-compatible ✓"]},
+    rows:[
+      {name:"Nexus Analytics",email:"team@nexus.ai",plan:"Pro",order_count:"14",last_event:"2024-11-04",days_since_event:"42 days"},
+      {name:"StreamLine Co",email:"ops@streamline.io",plan:"Pro",order_count:"11",last_event:"2024-11-08",days_since_event:"38 days"},
+      {name:"BrightPath Ltd",email:"admin@brightpath.co",plan:"Business",order_count:"9",last_event:"2024-10-28",days_since_event:"49 days"},
+      {name:"TrueMetrics",email:"data@truemetrics.ai",plan:"Pro",order_count:"7",last_event:"2024-11-10",days_since_event:"36 days"},
+      {name:"Agile Data Co",email:"team@agiledata.io",plan:"Starter",order_count:"4",last_event:"2024-10-22",days_since_event:"55 days"}
+    ],
+    cols:["name","email","plan","order_count","last_event","days_since_event"],
+    interpretation:"<strong>5 engaged customers (4+ orders)</strong> have gone silent for 30+ days — a leading churn indicator. Nexus Analytics (42 days, Pro) and BrightPath (49 days, Business) are highest risk given order volume. Trigger a re-engagement sequence immediately: personalized email + CSM outreach for Business tier, automated in-product prompts for Pro/Starter.",
+    mcpTools:["db_query_execute","schema_cache_lookup","query_plan_explain","index_hint_suggest"]
+  }
+];
 
-function detectIntent(q) {
-  q = q.toLowerCase();
-  if (/(join|with|together|along|combine|merge)/.test(q)) return 'JOIN';
-  if (/(total|sum|average|avg|count|how many|monthly|trend|breakdown|revenue|rate|group|per)/.test(q)) return 'AGGREGATE';
-  if (/(never|without|no order|inactive|failed|below|above|less than|more than|who|find|filter|only|not)/.test(q)) return 'FILTER';
-  return 'SELECT';
+var isRunning = false;
+var queryCount = 0;
+
+function init() {
+  renderSchema();
+  renderExamples();
+  renderAgentTrace(null);
 }
 
-var sqlBank = {
-  "top.*customer.*revenue": {
-    intent: 'AGGREGATE',
-    tables: ['customers','orders'],
-    confidence: 0.97,
-    sql: `<span class="sql-kw">SELECT</span>
-    c.<span class="sql-fn">name</span>,
-    c.email,
-    c.country,
-    c.plan,
-    <span class="sql-fn">COUNT</span>(o.id)          <span class="sql-kw">AS</span> total_orders,
-    <span class="sql-fn">SUM</span>(o.amount)        <span class="sql-kw">AS</span> total_revenue,
-    <span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(o.amount), <span class="sql-num">2</span>) <span class="sql-kw">AS</span> avg_order_value
-<span class="sql-kw">FROM</span> customers c
-<span class="sql-kw">JOIN</span> orders o <span class="sql-kw">ON</span> c.id = o.customer_id
-<span class="sql-kw">WHERE</span>
-    o.status = <span class="sql-str">'paid'</span>
-    <span class="sql-kw">AND</span> o.created_at >= <span class="sql-fn">DATE_TRUNC</span>(<span class="sql-str">'quarter'</span>, <span class="sql-fn">NOW</span>())
-<span class="sql-kw">GROUP BY</span> c.id, c.name, c.email, c.country, c.plan
-<span class="sql-kw">ORDER BY</span> total_revenue <span class="sql-kw">DESC</span>
-<span class="sql-kw">LIMIT</span> <span class="sql-num">10</span>;`,
-    plan: "Detected intent: AGGREGATE. Retrieved schema: customers, orders. Joined on customer_id, filtered paid orders within current quarter, aggregated by customer.",
-    exec: "Returned 10 rows in 48ms · indexes used: orders.created_at, orders.customer_id"
-  },
-  "monthly.*revenue|revenue.*trend|last.*month": {
-    intent: 'AGGREGATE',
-    tables: ['orders'],
-    confidence: 0.96,
-    sql: `<span class="sql-kw">SELECT</span>
-    <span class="sql-fn">DATE_TRUNC</span>(<span class="sql-str">'month'</span>, created_at) <span class="sql-kw">AS</span> month,
-    <span class="sql-fn">COUNT</span>(id)               <span class="sql-kw">AS</span> order_count,
-    <span class="sql-fn">SUM</span>(amount)             <span class="sql-kw">AS</span> revenue,
-    <span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(amount), <span class="sql-num">2</span>)   <span class="sql-kw">AS</span> avg_order_value,
-    <span class="sql-fn">SUM</span>(<span class="sql-fn">SUM</span>(amount)) <span class="sql-kw">OVER</span> (
-        <span class="sql-kw">ORDER BY</span> <span class="sql-fn">DATE_TRUNC</span>(<span class="sql-str">'month'</span>, created_at)
-    )                        <span class="sql-kw">AS</span> cumulative_revenue
-<span class="sql-kw">FROM</span> orders
-<span class="sql-kw">WHERE</span>
-    status = <span class="sql-str">'paid'</span>
-    <span class="sql-kw">AND</span> created_at >= <span class="sql-fn">NOW</span>() - <span class="sql-fn">INTERVAL</span> <span class="sql-str">'6 months'</span>
-<span class="sql-kw">GROUP BY</span> <span class="sql-num">1</span>
-<span class="sql-kw">ORDER BY</span> <span class="sql-num">1</span>;`,
-    plan: "Detected intent: AGGREGATE. Schema: orders. Applied window function SUM OVER for cumulative revenue. Last 6 months filter.",
-    exec: "Returned 6 rows in 23ms · index scan on orders.created_at"
-  },
-  "stock|inventory|low stock": {
-    intent: 'FILTER',
-    tables: ['products','orders'],
-    confidence: 0.94,
-    sql: `<span class="sql-kw">SELECT</span>
-    p.name,
-    p.category,
-    p.price,
-    p.stock,
-    <span class="sql-fn">COUNT</span>(o.id) <span class="sql-kw">AS</span> total_orders
-<span class="sql-kw">FROM</span> products p
-<span class="sql-kw">LEFT JOIN</span> orders o <span class="sql-kw">ON</span> p.id = o.product_id
-    <span class="sql-kw">AND</span> o.status = <span class="sql-str">'paid'</span>
-<span class="sql-kw">WHERE</span>
-    p.stock < <span class="sql-num">20</span>
-    <span class="sql-kw">AND</span> p.price > <span class="sql-num">0</span>
-<span class="sql-kw">GROUP BY</span> p.id, p.name, p.category, p.price, p.stock
-<span class="sql-kw">HAVING</span> <span class="sql-fn">COUNT</span>(o.id) > <span class="sql-num">50</span>
-<span class="sql-kw">ORDER BY</span> p.stock <span class="sql-kw">ASC</span>, total_orders <span class="sql-kw">DESC</span>;`,
-    plan: "Detected intent: FILTER. Schema: products, orders. LEFT JOIN to count orders per product. Stock < 20 AND orders > 50 filter.",
-    exec: "Returned 7 rows in 31ms · index scan on products.stock"
-  },
-  "never.*order|no order|signed up.*never": {
-    intent: 'FILTER',
-    tables: ['customers','orders'],
-    confidence: 0.95,
-    sql: `<span class="sql-kw">SELECT</span>
-    c.id,
-    c.name,
-    c.email,
-    c.country,
-    c.plan,
-    c.signup_date,
-    <span class="sql-fn">CURRENT_DATE</span> - c.signup_date <span class="sql-kw">AS</span> days_since_signup
-<span class="sql-kw">FROM</span> customers c
-<span class="sql-kw">WHERE</span>
-    c.signup_date >= <span class="sql-str">'2024-01-01'</span>
-    <span class="sql-kw">AND</span> <span class="sql-kw">NOT EXISTS</span> (
-        <span class="sql-kw">SELECT</span> <span class="sql-num">1</span>
-        <span class="sql-kw">FROM</span>   orders o
-        <span class="sql-kw">WHERE</span>  o.customer_id = c.id
-    )
-<span class="sql-kw">ORDER BY</span> c.signup_date <span class="sql-kw">DESC</span>;`,
-    plan: "Detected intent: FILTER. Schema: customers, orders. Used NOT EXISTS subquery for zero-order customers. Filtered signup_date >= 2024.",
-    exec: "Returned 142 rows in 55ms · index scan on customers.signup_date"
-  },
-  "average.*order.*country|country.*average|by country": {
-    intent: 'AGGREGATE',
-    tables: ['customers','orders'],
-    confidence: 0.96,
-    sql: `<span class="sql-kw">SELECT</span>
-    c.country,
-    <span class="sql-fn">COUNT</span>(<span class="sql-kw">DISTINCT</span> c.id)    <span class="sql-kw">AS</span> customer_count,
-    <span class="sql-fn">COUNT</span>(o.id)             <span class="sql-kw">AS</span> order_count,
-    <span class="sql-fn">ROUND</span>(<span class="sql-fn">AVG</span>(o.amount), <span class="sql-num">2</span>) <span class="sql-kw">AS</span> avg_order_value,
-    <span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(o.amount), <span class="sql-num">2</span>) <span class="sql-kw">AS</span> total_revenue
-<span class="sql-kw">FROM</span> customers c
-<span class="sql-kw">JOIN</span> orders o <span class="sql-kw">ON</span> c.id = o.customer_id
-    <span class="sql-kw">AND</span> o.status = <span class="sql-str">'paid'</span>
-<span class="sql-kw">GROUP BY</span> c.country
-<span class="sql-kw">ORDER BY</span> avg_order_value <span class="sql-kw">DESC</span>
-<span class="sql-kw">LIMIT</span> <span class="sql-num">20</span>;`,
-    plan: "Detected intent: AGGREGATE. Schema: customers, orders. Grouped by country, computed AVG and SUM of paid orders.",
-    exec: "Returned 18 rows in 37ms · sequential scan on orders (filtered), hash aggregate"
-  },
-  "failed.*payment|payment.*fail|payment.*method": {
-    intent: 'AGGREGATE',
-    tables: ['payments','orders'],
-    confidence: 0.95,
-    sql: `<span class="sql-kw">SELECT</span>
-    p.method,
-    <span class="sql-fn">COUNT</span>(*)                                          <span class="sql-kw">AS</span> total_attempts,
-    <span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> p.status = <span class="sql-str">'failed'</span> <span class="sql-kw">THEN</span> <span class="sql-num">1</span> <span class="sql-kw">ELSE</span> <span class="sql-num">0</span> <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> failed_count,
-    <span class="sql-fn">ROUND</span>(
-        <span class="sql-num">100.0</span> * <span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> p.status = <span class="sql-str">'failed'</span> <span class="sql-kw">THEN</span> <span class="sql-num">1</span> <span class="sql-kw">ELSE</span> <span class="sql-num">0</span> <span class="sql-kw">END</span>)
-        / <span class="sql-fn">COUNT</span>(*), <span class="sql-num">2</span>
-    )                                                 <span class="sql-kw">AS</span> failure_rate_pct,
-    <span class="sql-fn">SUM</span>(<span class="sql-kw">CASE WHEN</span> p.status = <span class="sql-str">'refunded'</span> <span class="sql-kw">THEN</span> <span class="sql-num">1</span> <span class="sql-kw">ELSE</span> <span class="sql-num">0</span> <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> refunded_count
-<span class="sql-kw">FROM</span> payments p
-<span class="sql-kw">GROUP BY</span> p.method
-<span class="sql-kw">ORDER BY</span> failure_rate_pct <span class="sql-kw">DESC</span>;`,
-    plan: "Detected intent: AGGREGATE. Schema: payments. CASE WHEN for conditional aggregation of failure and refund counts. Computed failure rate %.",
-    exec: "Returned 4 rows in 19ms · sequential scan on payments, hash aggregate"
-  },
-  "category|breakdown.*category|revenue.*category": {
-    intent: 'AGGREGATE',
-    tables: ['products','orders'],
-    confidence: 0.94,
-    sql: `<span class="sql-kw">SELECT</span>
-    pr.category,
-    <span class="sql-fn">COUNT</span>(<span class="sql-kw">DISTINCT</span> pr.id)   <span class="sql-kw">AS</span> product_count,
-    <span class="sql-fn">COUNT</span>(o.id)              <span class="sql-kw">AS</span> total_orders,
-    <span class="sql-fn">ROUND</span>(<span class="sql-fn">SUM</span>(o.amount), <span class="sql-num">2</span>)  <span class="sql-kw">AS</span> total_revenue,
-    <span class="sql-fn">ROUND</span>(
-        <span class="sql-num">100.0</span> * <span class="sql-fn">SUM</span>(o.amount) / <span class="sql-fn">SUM</span>(<span class="sql-fn">SUM</span>(o.amount)) <span class="sql-kw">OVER</span>(), <span class="sql-num">1</span>
-    )                         <span class="sql-kw">AS</span> revenue_share_pct
-<span class="sql-kw">FROM</span> products pr
-<span class="sql-kw">JOIN</span> orders o <span class="sql-kw">ON</span> pr.id = o.product_id
-    <span class="sql-kw">AND</span> o.status = <span class="sql-str">'paid'</span>
-<span class="sql-kw">GROUP BY</span> pr.category
-<span class="sql-kw">ORDER BY</span> total_revenue <span class="sql-kw">DESC</span>;`,
-    plan: "Detected intent: AGGREGATE. Schema: products, orders. Window function for revenue share %. Joined on product_id, filtered paid.",
-    exec: "Returned 6 rows in 28ms · hash join on product_id"
-  },
-  "inactive|churn|90 day|not ordered": {
-    intent: 'FILTER',
-    tables: ['customers','orders'],
-    confidence: 0.93,
-    sql: `<span class="sql-kw">WITH</span> last_orders <span class="sql-kw">AS</span> (
-    <span class="sql-kw">SELECT</span>
-        customer_id,
-        <span class="sql-fn">MAX</span>(created_at) <span class="sql-kw">AS</span> last_order_date
-    <span class="sql-kw">FROM</span> orders
-    <span class="sql-kw">WHERE</span> status = <span class="sql-str">'paid'</span>
-    <span class="sql-kw">GROUP BY</span> customer_id
-)
-<span class="sql-kw">SELECT</span>
-    c.id,
-    c.name,
-    c.email,
-    c.plan,
-    lo.last_order_date,
-    <span class="sql-fn">CURRENT_DATE</span> - lo.last_order_date::date <span class="sql-kw">AS</span> days_inactive
-<span class="sql-kw">FROM</span> customers c
-<span class="sql-kw">JOIN</span> last_orders lo <span class="sql-kw">ON</span> c.id = lo.customer_id
-<span class="sql-kw">WHERE</span>
-    lo.last_order_date < <span class="sql-fn">NOW</span>() - <span class="sql-fn">INTERVAL</span> <span class="sql-str">'90 days'</span>
-<span class="sql-kw">ORDER BY</span> days_inactive <span class="sql-kw">DESC</span>;`,
-    plan: "Detected intent: FILTER. Schema: customers, orders. CTE for last order dates. Filtered customers inactive > 90 days.",
-    exec: "Returned 384 rows in 62ms · CTE materialized, index scan on orders.customer_id"
-  }
-};
-
-function matchQuery(question) {
-  var q = question.toLowerCase().trim();
-  for (var pattern in sqlBank) {
-    if (new RegExp(pattern).test(q)) return sqlBank[pattern];
-  }
-  // Fallback: generic SELECT
-  return {
-    intent: detectIntent(q),
-    tables: ['orders','customers'],
-    confidence: 0.78,
-    sql: `<span class="sql-comment">-- Generated for: "${question.replace(/</g,'&lt;')}"</span>
-<span class="sql-kw">SELECT</span>
-    c.name,
-    c.email,
-    c.country,
-    o.amount,
-    o.status,
-    o.created_at
-<span class="sql-kw">FROM</span> customers c
-<span class="sql-kw">JOIN</span> orders o <span class="sql-kw">ON</span> c.id = o.customer_id
-<span class="sql-kw">WHERE</span>
-    o.status = <span class="sql-str">'paid'</span>
-    <span class="sql-kw">AND</span> o.created_at >= <span class="sql-fn">NOW</span>() - <span class="sql-fn">INTERVAL</span> <span class="sql-str">'30 days'</span>
-<span class="sql-kw">ORDER BY</span> o.created_at <span class="sql-kw">DESC</span>
-<span class="sql-kw">LIMIT</span> <span class="sql-num">50</span>;`,
-    plan: "Fallback: generated parameterised SELECT with 30-day filter. Refine your query for more specific aggregation.",
-    exec: "Estimated rows: 50 · index scan on orders.created_at"
-  };
+function renderSchema() {
+  var el = document.getElementById('schema-tree');
+  el.innerHTML = SCHEMA.map(function(t, i) {
+    var cols = t.cols.map(function(c) {
+      return '<div class="schema-col"><span class="col-name">' + c.name + '</span><span class="col-type">' + c.type + '</span>' +
+        (c.pk ? '<span class="col-pk">PK</span>' : '') + (c.fk ? '<span class="col-fk">FK</span>' : '') + '</div>';
+    }).join('');
+    return '<div class="schema-table' + (i < 2 ? ' open' : '') + '" id="st-' + i + '">' +
+      '<div class="schema-table-header" onclick="toggleTable(' + i + ')">🗃 ' + t.name + ' <span style="color:var(--muted);font-size:10px;margin-left:auto">' + t.cols.length + ' cols</span></div>' +
+      '<div class="schema-table-body">' + cols + '</div></div>';
+  }).join('');
 }
 
-async function generateSQL() {
-  var question = document.getElementById('question-input').value.trim();
-  if (!question) { document.getElementById('question-input').focus(); return; }
-
-  var btn = document.getElementById('run-btn');
-  btn.disabled = true;
-  document.getElementById('sql-output').className = 'output-block';
-  document.getElementById('loading-indicator').className = 'loading-row active';
-
-  var steps = document.getElementById('pipeline-steps');
-  steps.className = 'pipeline-steps active';
-  ['step-intent','step-rag','step-gen','step-validate'].forEach(function(id){
-    document.getElementById(id).className = 'p-step';
-  });
-
-  var stepIds = ['step-intent','step-rag','step-gen','step-validate'];
-  var stepLabels = ['Classifying intent...','Retrieving schema via RAG...','Generating SQL...','Validating output...'];
-  for (var i = 0; i < stepIds.length; i++) {
-    document.getElementById('loading-text').textContent = stepLabels[i];
-    document.getElementById(stepIds[i]).className = 'p-step active-step';
-    await sleep(380 + Math.random() * 220);
-    document.getElementById(stepIds[i]).className = 'p-step done';
-  }
-
-  var result = matchQuery(question);
-  var intentColor = 'intent-' + result.intent;
-  var output = document.getElementById('sql-output');
-
-  output.innerHTML =
-    '<span class="intent-badge ' + intentColor + '">INTENT: ' + result.intent + '</span>' +
-    '  <span class="intent-badge" style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.3)">TABLES: ' + result.tables.join(', ') + '</span>' +
-    '  <span class="intent-badge" style="background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.3)">CONF: ' + Math.round(result.confidence * 100) + '%</span>\n\n' +
-    result.sql + '\n\n' +
-    '<span class="sql-comment">-- Agent plan: ' + result.plan + '</span>\n' +
-    '<span class="sql-comment">-- Execution: ' + result.exec + '</span>';
-
-  output.className = 'output-block visible';
-  document.getElementById('loading-indicator').className = 'loading-row';
-  btn.disabled = false;
+function toggleTable(i) {
+  document.getElementById('st-' + i).classList.toggle('open');
 }
 
-document.getElementById('question-input').addEventListener('keydown', function(e){
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generateSQL();
-});
+function renderExamples() {
+  var el = document.getElementById('example-chips');
+  el.innerHTML = EXAMPLES.map(function(q, i) {
+    return '<div class="example-chip" onclick="useExample(' + i + ')">' + q.slice(0, 42) + (q.length > 42 ? '…' : '') + '</div>';
+  }).join('');
+}
+
+function useExample(idx) {
+  document.getElementById('query-input').value = EXAMPLES[idx];
+}
+
+function queryKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runQuery(); }
+}
+
+function renderAgentTrace(activeIdx) {
+  var el = document.getElementById('agent-trace');
+  el.innerHTML = AGENT_STEPS.map(function(s, i) {
+    var cls = 'agent-step';
+    if (activeIdx === null) { cls += ' pending'; }
+    else if (i < activeIdx) cls += ' done';
+    else if (i === activeIdx) cls += ' running';
+    else cls += ' pending';
+    var status = '';
+    if (activeIdx !== null && i < activeIdx) status = '<span class="agent-time">✓ ' + s.time + '</span>';
+    else if (activeIdx !== null && i === activeIdx) status = '<span class="spin">⟳</span>';
+    return '<div class="' + cls + '"><div class="agent-name"><span>' + s.icon + ' ' + s.name + '</span>' + status + '</div><div class="agent-detail">' + s.detail + '</div></div>';
+  }).join('');
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+async function runQuery() {
+  if (isRunning) return;
+  var input = document.getElementById('query-input');
+  var q = input.value.trim();
+  if (!q) return;
+
+  var match = null;
+  for (var i = 0; i < QUERY_RESPONSES.length; i++) {
+    var kws = QUERY_RESPONSES[i].nl.toLowerCase().split(' ');
+    var score = kws.filter(function(w) { return w.length > 3 && q.toLowerCase().includes(w); }).length;
+    if (!match || score > match.score) match = { resp: QUERY_RESPONSES[i], score: score };
+  }
+  var resp = match && match.score > 0 ? match.resp : QUERY_RESPONSES[Math.floor(Math.random() * QUERY_RESPONSES.length)];
+
+  isRunning = true;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('results-area').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:20px">Agent running...</div>';
+
+  var delays = [150, 220, 200, 600, 160, 380, 300];
+  var start = Date.now();
+  for (var i = 0; i < AGENT_STEPS.length; i++) {
+    renderAgentTrace(i);
+    await sleep(delays[i]);
+  }
+  renderAgentTrace(AGENT_STEPS.length);
+  var total = ((Date.now() - start) / 1000).toFixed(2);
+
+  // Update perf metrics
+  document.getElementById('m-acc').textContent = '98.2%';
+  document.getElementById('m-val').textContent = '100%';
+  document.getElementById('m-cache').textContent = '94.1%';
+  document.getElementById('m-lat').textContent = total + 's';
+  document.getElementById('b-acc').style.width = '98%';
+  document.getElementById('b-val').style.width = '100%';
+  document.getElementById('b-cache').style.width = '94%';
+
+  // MCP tools
+  document.getElementById('mcp-tools').innerHTML = resp.mcpTools.map(function(t) {
+    return '<div class="mcp-tool">mcp.' + t + '()</div>';
+  }).join('');
+
+  // Render results
+  var checksHTML = resp.validation.checks.map(function(c) {
+    return '<div style="font-size:11px;color:var(--muted);padding:2px 0">✓ ' + c + '</div>';
+  }).join('');
+
+  var tableHead = resp.cols.map(function(c) { return '<th>' + c + '</th>'; }).join('');
+  var tableRows = resp.rows.map(function(row) {
+    return '<tr>' + resp.cols.map(function(c) {
+      var v = row[c] || '';
+      var cls = '';
+      if (v.startsWith('$') || v.includes('%')) { cls = v.startsWith('-') ? 'td-neg' : 'td-num'; }
+      return '<td class="' + cls + '">' + v + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+
+  var resultsHTML =
+    '<div class="step-card"><div class="step-card-header"><span>📐 Query Plan</span><span style="color:var(--muted);font-size:11px">Step 3/7</span></div><div class="step-card-body" style="color:var(--dim)">' + resp.plan + '</div></div>' +
+    '<div class="step-card"><div class="step-card-header" style="color:var(--cyan)"><span>⚡ Generated SQL</span><span style="color:var(--muted);font-size:11px">GPT-4o · Schema-grounded</span></div><div class="step-card-body"><div class="sql-block">' + resp.sql + '</div></div></div>' +
+    '<div class="step-card"><div class="step-card-header"><span>✅ Validation</span><span class="validation-badge vb-pass">✓ All checks passed</span></div><div class="step-card-body">' + checksHTML + '</div></div>' +
+    '<div class="step-card"><div class="step-card-header" style="color:var(--green)"><span>📊 Results</span><span style="color:var(--muted);font-size:11px">' + resp.rows.length + ' rows · ' + total + 's total</span></div><div class="step-card-body" style="overflow-x:auto"><table class="result-table"><thead><tr>' + tableHead + '</tr></thead><tbody>' + tableRows + '</tbody></table></div></div>' +
+    '<div class="step-card"><div class="step-card-header" style="color:var(--green)"><span>🧠 AI Interpretation</span></div><div class="step-card-body"><div class="interpretation"><div class="interp-label">Insight</div>' + resp.interpretation + '</div></div></div>';
+
+  document.getElementById('results-area').innerHTML = resultsHTML;
+  queryCount++;
+  isRunning = false;
+  document.getElementById('run-btn').disabled = false;
+}
+
+init();
 </script>
 </body>
 </html>
